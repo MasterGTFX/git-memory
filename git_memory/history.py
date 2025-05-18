@@ -1,88 +1,151 @@
 import os
 import git
-from typing import List, Optional
-from git_memory.ai import summarize_diff, generate_diagram # Assuming these exist based on summaries
+from typing import Optional
+# Assuming other necessary imports like ai functions etc.
 import typer # Import typer for secho
 
-def generate_history(repo_path: str, commits_per_group: int, min_diff_lines: Optional[int]):
+# Assuming these exist based on summaries and PROJECT.md
+# from git_memory.ai import summarize_diff, generate_diagram
+
+# Placeholder for the actual implementation
+def generate_history(repo_path: str, min_diff_lines: Optional[int]):
     """
-    Generates the .history directory with commit group information.
+    Walks through the Git repository history, processing commits
+    that meet the minimum diff line threshold.
+
+    Args:
+        repo_path: Path to the Git repository.
+        min_diff_lines: Minimum number of diff lines for a commit to be processed.
+                        If None, all commits are processed.
     """
-    repo = git.Repo(repo_path)
-    history_dir = os.path.join(repo_path, ".history")
+    try:
+        repo = git.Repo(repo_path)
+        # Ensure the repo is not bare
+        if repo.bare:
+            typer.secho(f"Error: Repository at {repo_path} is bare.", fg=typer.colors.RED)
+            return
 
-    # Ensure .history directory exists
-    os.makedirs(history_dir, exist_ok=True)
+        history_dir = os.path.join(repo_path, ".history")
+        os.makedirs(history_dir, exist_ok=True)
 
-    # Get all commits in reverse chronological order
-    all_commits = list(repo.iter_commits())
-    all_commits.reverse() # Process chronologically
+        # Iterate through commits in reverse chronological order (latest first)
+        # Process from oldest to newest for history building
+        commits = list(repo.iter_commits('HEAD'))
+        commits.reverse() # Process from oldest to newest
 
-    # Group commits
-    commit_groups = []
-    current_group = []
-    for commit in all_commits:
-        current_group.append(commit)
-        # Check if the current group size meets the minimum or if it's the last commit
-        if len(current_group) >= commits_per_group or commit == all_commits[-1]:
-            # Calculate diff for the potential group
-            # Note: Diff calculation here is just for potential min_diff_lines check,
-            # the actual diff saved is calculated later for the final group.
-            # This part could be optimized if min_diff_lines check is not needed here.
-            first_commit_in_group_temp = current_group[0]
-            last_commit_in_group_temp = current_group[-1]
-            parent_of_group_temp = last_commit_in_group_temp.parents[0] if last_commit_in_group_temp.parents else None
-            diff_temp = repo.git.diff(parent_of_group_temp, first_commit_in_group_temp.hexsha)
+        typer.secho(f"Found {len(commits)} commits.", fg=typer.colors.GREEN)
 
-            # Check min_diff_lines threshold (if specified)
-            # NOTE: min_diff_lines logic is not implemented yet.
-            # This is where you would check len(diff_temp.splitlines()) >= min_diff_lines
-            # If the check fails, you might continue adding commits to current_group
-            # instead of finalizing the group here.
+        # TODO: Implement logic to resume from the last processed commit
 
-            # Add the group if it meets criteria (currently just size)
-            commit_groups.append(current_group)
-            current_group = [] # Start a new group
+        processed_count = 0
+        skipped_count = 0
 
-    # Process each commit group
-    for i, commit_group in enumerate(commit_groups):
-        # commit_group is already in chronological order
-        first_commit_in_group = commit_group[-1] # Newest commit in this chronological group
-        last_commit_in_group = commit_group[0] # Oldest commit in this chronological group
+        for i, commit in enumerate(commits):
+            commit_hash = commit.hexsha
+            commit_summary = commit.summary.splitlines()[0] # Get first line of summary
 
-        # Use the hash of the oldest commit in the group for the directory name
-        group_dir_name = last_commit_in_group.hexsha
-        group_dir = os.path.join(history_dir, group_dir_name)
-        os.makedirs(group_dir, exist_ok=True)
+            # Get the diff for the current commit relative to its parent(s)
+            # For merge commits, this might need more complex handling
+            # For simplicity, let's compare to the first parent
+            diff_text = ""
+            diff_lines = 0
+            if len(commit.parents) > 0:
+                # Compare commit to its first parent
+                diff_index = commit.diff(commit.parents[0], create_patch=True)
+                diff_text = diff_index.diff.decode('utf-8', errors='ignore')
+                diff_lines = len(diff_text.splitlines())
+            else:
+                # Initial commit: diff against empty tree
+                # This requires a different diff command
+                # git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 <commit>
+                # 4b825dc642cb6eb9a060e54bf8d69288fbee4904 is the hash of the empty tree
+                empty_tree_hash = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+                try:
+                    diff_text = repo.git.diff(empty_tree_hash, commit_hash)
+                    diff_lines = len(diff_text.splitlines())
+                except git.exc.GitCommandError as e:
+                     typer.secho(f"Warning: Could not generate diff for initial commit {commit_hash[:7]}: {e}", fg=typer.colors.YELLOW)
+                     diff_text = ""
+                     diff_lines = 0
 
-        # Corrected print statement to show the range of commits
-        typer.secho(f"Processing group {i+1}/{len(commit_groups)}: {last_commit_in_group.hexsha}..{first_commit_in_group.hexsha} ({len(commit_group)} commits)...", fg=typer.colors.BLUE)
 
-        # Calculate the diff from the parent of the oldest commit to the newest commit in the group.
-        # If parent_of_group is None (initial commit group), diff is from empty tree to first_commit_in_group.
-        parent_of_group = last_commit_in_group.parents[0] if last_commit_in_group.parents else None
-        diff = repo.git.diff(parent_of_group, first_commit_in_group.hexsha)
+            typer.secho(f"Processing commit {i+1}/{len(commits)}: {commit_hash[:7]} - {commit_summary} ({diff_lines} lines changed)", fg=typer.colors.BLUE)
 
-        # Save the diff
-        with open(os.path.join(group_dir, "diff.patch"), "w", encoding="utf-8") as f:
-             f.write(diff)
+            # Apply min_diff_lines filter
+            if min_diff_lines is not None and diff_lines < min_diff_lines:
+                typer.secho(f"  → Skipping: Diff lines ({diff_lines}) below threshold ({min_diff_lines})", fg=typer.colors.YELLOW)
+                skipped_count += 1
+                # TODO: Track skipped commits
+                continue
 
-        # Generate and save memory (stub for now)
-        # memory_content = summarize_diff(diff) # Placeholder
-        memory_content = f"Memory for commits {last_commit_in_group.hexsha}..{first_commit_in_group.hexsha}" # Stub
-        with open(os.path.join(group_dir, "memory.md"), "w", encoding="utf-8") as f:
-            f.write(memory_content)
+            processed_count += 1
 
-        # Generate and save structure (stub for now)
-        # structure_content = generate_diagram(...) # Placeholder
-        structure_content = f"Structure diagram for commits {last_commit_in_group.hexsha}..{first_commit_in_group.hexsha}" # Stub
-        with open(os.path.join(group_dir, "structure.mmd"), "w", encoding="utf-8") as f:
-            f.write(structure_content)
+            # Create directory .history/<commit_hash>/
+            commit_dir = os.path.join(history_dir, commit_hash)
+            os.makedirs(commit_dir, exist_ok=True)
 
-    # Create aggregated files (stubs for now)
-    with open(os.path.join(history_dir, "history.md"), "w", encoding="utf-8") as f:
-        f.write("Aggregated History\n") # Stub
-    with open(os.path.join(history_dir, "memory.md"), "w", encoding="utf-8") as f:
-        f.write("Aggregated Memory\n") # Stub
-    with open(os.path.join(history_dir, "structure.mmd"), "w", encoding="utf-8") as f:
-        f.write("Aggregated Structure\n") # Stub
+            # Save diff_text to .history/<commit_hash>/diff.patch
+            diff_file_path = os.path.join(commit_dir, "diff.patch")
+            with open(diff_file_path, "w", encoding="utf-8") as f:
+                 f.write(diff_text)
+            typer.secho("  → Saved diff.patch ✅", fg=typer.colors.GREEN)
+
+
+            # TODO: Call AI functions (summarize_diff, generate_diagram)
+            #    - ai.summarize_diff(diff_text) -> memory_content
+            #    - ai.generate_diagram(structure_data) -> structure_content (Need to extract structure_data first)
+
+            # Placeholder stubs for memory and structure
+            memory_content = f"Memory for commit {commit_hash[:7]}: {commit_summary}\n\n[Diff details...]" # Stub
+            structure_content = f"Structure diagram for commit {commit_hash[:7]}\n\n[Mermaid diagram...]" # Stub
+
+            # Save memory_content to .history/<commit_hash>/memory.md
+            memory_file_path = os.path.join(commit_dir, "memory.md")
+            with open(memory_file_path, "w", encoding="utf-8") as f:
+                f.write(memory_content)
+            typer.secho("  → Saved memory.md ✅", fg=typer.colors.GREEN)
+
+            # Save structure_content to .history/<commit_hash>/structure.mmd
+            structure_file_path = os.path.join(commit_dir, "structure.mmd")
+            with open(structure_file_path, "w", encoding="utf-8") as f:
+                f.write(structure_content)
+            typer.secho("  → Saved structure.mmd ✅", fg=typer.colors.GREEN)
+
+            # TODO: Update the main .history/ files (memory.md, history.md, structure.mmd)
+            # This step depends on how the main files are aggregated -
+            # perhaps they are generated *after* processing all commits,
+            # or incrementally updated. Let's assume incremental for now.
+            # For now, these main files are just stubs created at the end.
+
+
+        # Create aggregated files (stubs for now) - This logic needs refinement
+        # based on how aggregation should work (e.g., concatenating all memory.md files)
+        typer.secho("\nGenerating aggregated files (stubs)...", fg=typer.colors.YELLOW)
+        with open(os.path.join(history_dir, "history.md"), "w", encoding="utf-8") as f:
+            f.write("Aggregated History (Stub)\n") # Stub
+        with open(os.path.join(history_dir, "memory.md"), "w", encoding="utf-8") as f:
+            f.write("Aggregated Memory (Stub)\n") # Stub
+        with open(os.path.join(history_dir, "structure.mmd"), "w", encoding="utf-8") as f:
+            f.write("Aggregated Structure (Stub)\n") # Stub
+        typer.secho("Aggregated files created.", fg=typer.colors.GREEN)
+
+
+        typer.secho("\nHistory generation complete.", fg=typer.colors.GREEN)
+        typer.secho(f"Processed {processed_count} commits.", fg=typer.colors.GREEN)
+        if skipped_count > 0:
+             typer.secho(f"Skipped {skipped_count} commits (below min_diff_lines threshold).", fg=typer.colors.YELLOW)
+
+        # TODO: Implement summary table output
+
+    except git.exc.InvalidGitRepositoryError:
+        typer.secho(f"Error: {repo_path} is not a valid Git repository.", fg=typer.colors.RED)
+    except Exception as e:
+        typer.secho(f"An unexpected error occurred: {e}", fg=typer.colors.RED)
+        # Optional: print traceback for debugging
+        # import traceback
+        # traceback.print_exc()
+
+# TODO: Add functions for saving files, calling AI, etc.
+# from .ai import summarize_diff, generate_diagram
+# from .config import Config
+# import time # for simulation

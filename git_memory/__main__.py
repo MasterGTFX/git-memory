@@ -1,6 +1,8 @@
 import typer
-from git_memory.config import Config
-from git_memory.history import generate_history
+from typing import Optional
+
+from .config import Config
+from .history import generate_history
 
 app = typer.Typer(
     help="AI-powered commit-by-commit memory and structure tracking for Git projects."
@@ -8,20 +10,21 @@ app = typer.Typer(
 
 @app.command()
 def main(
-    repo_path: str = typer.Argument(..., exists=True, file_okay=False, dir_okay=True, help="Path to the Git repository"),
-    commits_per_group: int = typer.Option(Config.commits_per_group, "--commits-per-group", help="Number of commits to include in each group (minimum, except the last group)"),
-    min_diff_lines: int | None = typer.Option(Config.min_diff_lines, "--min-diff-lines", help="Minimum diff lines threshold"),
-    model_provider: str = typer.Option(Config.model_provider, "--model-provider", help="Model provider (openai or openrouter)"),
+    repo_path: str = typer.Argument(..., exists=True, file_okay=False, dir_okay=True, help="Path to the Git repository."),
+    min_diff_lines: int | None = typer.Option(Config.min_diff_lines, "--min-diff-lines", help="Minimum number of diff lines for a commit to be processed."),
+    model_provider: str = typer.Option(Config.model_provider, "--model-provider", help="Model provider (e.g., openai, openrouter)."),
     model: str = typer.Option(Config.model, "--model", help="Model name"),
 ):
-    """Generate AI-based git memory for the specified repository."""
-    typer.secho(f"Repository: {repo_path}", fg=typer.colors.GREEN)
-    typer.secho(f"Group commits by: {commits_per_group}", fg=typer.colors.BLUE)
+    """
+    Generates AI-powered memory and structure tracking for a Git repository.
+    """
+    typer.echo(f"Processing repository: {repo_path}")
+    typer.echo(f"Minimum diff lines: {min_diff_lines}")
+    typer.echo(f"Model provider: {model_provider}")
+    typer.echo(f"Model: {model}")
 
-    typer.secho("Generating history...", fg=typer.colors.YELLOW)
-    generate_history(repo_path, commits_per_group, min_diff_lines)
-    typer.secho("History generation complete. See .history/ directory.", fg=typer.colors.GREEN)
-
+    # Call the history generation function
+    generate_history(repo_path=repo_path, min_diff_lines=min_diff_lines)
 
 if __name__ == "__main__":
     app()

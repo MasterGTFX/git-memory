@@ -8,15 +8,15 @@
 
 ## **Project Summary**
 
-`git-memory` is a Python CLI tool and library that walks through a Git repository’s history to generate a detailed memory (`memory.md`), a structural diagram (`structure.mmd`), and a patch (`history.md`) per commit (or commit group). 
+`git-memory` is a Python CLI tool and library that walks through a Git repository’s history to generate a detailed memory (`memory.md`), a structural diagram (`structure.mmd`), and a patch (`history.md`) per commit.
 It integrates with AI providers (like OpenAI) to generate summaries and visual diagrams that reflect the evolution of the project.
-Each commit (or group of commits) gets:
+Each commit gets:
 
 * a natural-language memory (`memory.md`)
 * a Mermaid diagram (`structure.mmd`)
 * a history file with the patches (`history.md`)
 
-Each commit (or related group of commits) for these files should capture:
+Each commit for these files should capture:
 
 * **removal** of deprecated data.
 * **updates** made to existing data.
@@ -116,7 +116,7 @@ Summary:
 
 ```
 .history/ (current HEAD)
-│   memory.md 
+│   memory.md
 │   history.md
 │   structure.mmd
 ├── <commit_hash>/  (history)
@@ -125,7 +125,7 @@ Summary:
 │   └── structure.mmd
 ```
 
-If commit grouping is used, the folder is named using the **last commit hash** in the group.
+The folder for each historical commit is named using the **commit hash**.
 
 ### **CLI Usage**
 
@@ -135,15 +135,13 @@ git-memory /path/to/repo
 # Optional arguments:
 --model-provider openai|openrouter
 --model gpt-4o|gemini-2.5-flash-preview
---min-commits 1                        # group commits by number (default 1)
 --min-diff-lines 100                   # minimum diff lines threshold (default None)
 ```
 
-### **Commit Grouping + Smart Tracking**
+### **Smart Tracking**
 
-* Can group N commits using `--min-commits N`
-* Commits skipped (due to grouping or `--min-diff-lines`) are tracked
-* Tool intelligently resumes after the last processed commit group
+* Commits skipped (due to `--min_diff_lines`) are tracked
+* Tool intelligently resumes after the last processed commit
 * Ensures no overlapping or duplicate `.history/` entries
 
 
@@ -181,4 +179,3 @@ git-memory /path/to/repo
 * CLI boilerplate (`argparse` or `typer`)
 * AI abstraction for OpenAI
 * First working version of `.history/` generation with dummy prompts
-
