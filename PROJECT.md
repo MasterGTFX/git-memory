@@ -1,0 +1,184 @@
+# **Project Name: `git-memory`**
+
+## **Tagline**
+
+> *AI-powered commit-by-commit memory and structure tracking for your Git projects.*
+
+---
+
+## **Project Summary**
+
+`git-memory` is a Python CLI tool and library that walks through a Git repository’s history to generate a detailed memory (`memory.md`), a structural diagram (`structure.mmd`), and a patch (`history.md`) per commit (or commit group). 
+It integrates with AI providers (like OpenAI) to generate summaries and visual diagrams that reflect the evolution of the project.
+Each commit (or group of commits) gets:
+
+* a natural-language memory (`memory.md`)
+* a Mermaid diagram (`structure.mmd`)
+* a history file with the patches (`history.md`)
+
+Each commit (or related group of commits) for these files should capture:
+
+* **removal** of deprecated data.
+* **updates** made to existing data.
+* **addition** of new, meaningful content.
+
+This tool helps developers track how their code evolves, understand dependencies, and explore potential optimizations — all through structured AI-generated documentation.
+
+---
+
+## **Key Use Cases**
+
+### 1. **Historical Project Memory**
+
+Generate a complete commit-by-commit history that can be:
+
+* Used as input for another AI to understand how the project evolved
+* Shared with new team members to quickly get them up to speed
+* Used as a changelog-like document with deep context
+
+### 2. **Structure Visualization**
+
+Mermaid diagrams show structural components of the project as they change over time:
+
+* Classes, files, services, and their relationships
+* Visual dependency tracking
+* Useful for architecture reviews or onboarding
+
+### 3. **AI-Based Refactoring Suggestions**
+
+By analyzing the `memory.md` history:
+
+* An LLM could suggest project-level refactors
+* Spot tech debt patterns or architectural inconsistencies
+* Help with migration planning or performance reviews
+
+### 4. **Educational / Research Tool**
+
+* Understand how real-world software evolves over time
+* Ideal for students, researchers, or technical writers
+* Easy to visualize open source projects' evolution
+
+### 5. **LLM Preprocessor**
+
+Use `.history/` as a **knowledge base** input for an LLM agent:
+
+* Generate context-rich embeddings for Retrieval-Augmented Generation (RAG)
+* Power AI agents with structured memory of a codebase
+
+---
+
+## **Visual and UX Features (CLI)**
+
+### **Polished CLI Interface**
+
+* **Colored output** (via `rich`)
+* Shows:
+
+  * Commit hash, message
+  * Time range
+  * Number of lines changed
+  * Tokens sent/received
+* **Live animation** (e.g., spinner or progress bar)
+* Summary table after each run:
+
+  * Commits processed
+  * Files touched
+  * Total token cost
+  * Time spent
+
+### **Example CLI Output**
+
+```
+[git-memory] Processing commit abc123 - "Add user auth flow" (312 LOC changed)
+  → Generating diff        ✅
+  → Sending to LLM         ✉️ (2,354 tokens)
+  → Received memory.md     ✅
+  → Received structure.mmd ✅
+  → Saved to .history/abc123/
+
+Summary:
+• Commits analyzed: 1
+• Total tokens: 2,354 sent, 1,930 received
+• Total time: 12.3s
+```
+
+---
+
+## **Technical Additions**
+
+### **Language & Version**
+
+* Written in **Python 3.11+**
+* Uses `typer` or `click` for CLI
+* `rich` or `textual` for colored + structured terminal output
+
+### **.history/ Folder Structure**
+
+```
+.history/ (current HEAD)
+│   memory.md 
+│   history.md
+│   structure.mmd
+├── <commit_hash>/  (history)
+│   ├── memory.md
+│   ├── diff.patch
+│   └── structure.mmd
+```
+
+If commit grouping is used, the folder is named using the **last commit hash** in the group.
+
+### **CLI Usage**
+
+```bash
+git-memory /path/to/repo
+
+# Optional arguments:
+--model-provider openai|openrouter
+--model gpt-4o|gemini-2.5-flash-preview
+--min-commits 1                        # group commits by number (default 1)
+--min-diff-lines 100                   # minimum diff lines threshold (default None)
+```
+
+### **Commit Grouping + Smart Tracking**
+
+* Can group N commits using `--min-commits N`
+* Commits skipped (due to grouping or `--min-diff-lines`) are tracked
+* Tool intelligently resumes after the last processed commit group
+* Ensures no overlapping or duplicate `.history/` entries
+
+
+### **Configuration**
+
+* CLI flags override config
+* Config stored in `config.py`
+* API key & model defaults (GPT-4o via OpenAI)
+* Easily switch to OpenRouter, Local (Ollama etc.) by allowing to override BASE_URL
+
+### **Prompt System**
+
+* Prompts defined in `prompts/` as `.md` files
+* Can be edited or templated:
+
+  * `system.md`
+  * `memory_prompt.md`
+  * `diagram_prompt.md`
+
+---
+
+## **Development Goals**
+
+* Focused and minimal MVP
+* Safe Git operations only
+* No changes to the original repo
+* Supports both **Linux** and **Windows**
+* No overengineering, just clean modular code
+
+---
+
+## **Next Steps**
+
+* Initial `pyproject.toml`
+* CLI boilerplate (`argparse` or `typer`)
+* AI abstraction for OpenAI
+* First working version of `.history/` generation with dummy prompts
+
