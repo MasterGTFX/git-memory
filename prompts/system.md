@@ -1,0 +1,1 @@
+ <!-- System prompt: defines the AI listener role for git-memory -->

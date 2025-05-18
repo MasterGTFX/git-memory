@@ -1,0 +1,1 @@
+ <!-- Memory prompt: instructions for generating natural-language memory per commit -->

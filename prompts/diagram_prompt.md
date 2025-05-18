@@ -1,0 +1,1 @@
+ <!-- Diagram prompt: instructions for generating Mermaid diagrams of project structure -->
