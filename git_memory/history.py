@@ -1,38 +1,84 @@
 """
-History generation stub for git-memory.
+History generation for git-memory.
 """
 
 import os
-from git import Repo
+from git import Repo, Commit
 
 def generate_history(repo_path: str, min_commits: int, min_diff_lines: int | None) -> None:
     """
-    Walk through commits and generate stub history files for each commit.
+    Walk through commits and generate history files for each commit group.
+    Groups commits by min_commits. Skips processing if the group's directory exists.
     """
     repo = Repo(repo_path)
     history_dir = os.path.join(os.getcwd(), ".history")
     os.makedirs(history_dir, exist_ok=True)
 
-    commits = list(repo.iter_commits(max_count=min_commits))
-    for commit in commits:
-        commit_dir = os.path.join(history_dir, commit.hexsha)
-        os.makedirs(commit_dir, exist_ok=True)
+    # Iterate through commits in reverse chronological order (HEAD first)
+    # We get all commits first to easily check for the last commit in the repo
+    all_commits = list(repo.iter_commits())
 
-        # Write dummy memory
-        with open(os.path.join(commit_dir, "memory.md"), "w") as f:
-            f.write(f"# Memory for commit {commit.hexsha}\n\n_Dummy memory_\n")
+    commit_group = []
+    # Iterate through commits from newest to oldest
+    for commit in all_commits:
+        commit_group.append(commit)
 
-        # Write dummy structure diagram
-        with open(os.path.join(commit_dir, "structure.mmd"), "w") as f:
-            f.write(f"%% Dummy diagram for commit {commit.hexsha}\n")
+        # Check if the group is full or if this is the last commit in the entire history
+        # The last commit in `all_commits` is the oldest commit in the repo.
+        is_last_commit_in_repo = (commit == all_commits[-1])
 
-        # Write diff patch
-        parent = commit.parents[0] if commit.parents else None
-        diff = repo.git.diff(parent, commit.hexsha)
-        with open(os.path.join(commit_dir, "diff.patch"), "w", encoding="utf-8") as f:
-            f.write(diff)
+        if len(commit_group) == min_commits or is_last_commit_in_repo:
+            # The directory name is based on the hash of the *last* commit in the group (oldest chronologically).
+            # Since commit_group is built from newest to oldest, the last element added is the newest,
+            # and the first element added is the newest. The oldest commit in the group is the last element
+            # in the current `commit_group` list.
+            group_identifier_commit = commit_group[-1]
+            group_dir = os.path.join(history_dir, group_identifier_commit.hexsha)
 
-    # Stub aggregated files
+            # Check if this group has already been processed by checking if its directory exists
+            if os.path.exists(group_dir):
+                print(f"Skipping group ending with commit {group_identifier_commit.hexsha} ({len(commit_group)} commits) - already processed.")
+                # Clear the group and continue to the next commit
+                commit_group = []
+                continue
+
+            print(f"Processing group ending with commit {group_identifier_commit.hexsha} ({len(commit_group)} commits)...")
+            os.makedirs(group_dir, exist_ok=True)
+
+            # --- Process the commit group ---
+            # For now, write dummy files. This is where AI calls will go later.
+
+            # Write dummy memory
+            with open(os.path.join(group_dir, "memory.md"), "w") as f:
+                f.write(f"# Memory for commit group ending {group_identifier_commit.hexsha}\n\n_Dummy memory for {len(commit_group)} commits_\n")
+
+            # Write dummy structure diagram
+            with open(os.path.join(group_dir, "structure.mmd"), "w") as f:
+                f.write(f"%% Dummy diagram for commit group ending {group_identifier_commit.hexsha}\n")
+
+            # Write aggregated diff patch for the group.
+            # This diff should represent the changes from the state *before* the oldest commit in the group
+            # to the state *after* the newest commit in the group.
+            first_commit_in_group = commit_group[0] # This is the newest commit in the group
+            last_commit_in_group = commit_group[-1] # This is the oldest commit in the group
+
+            # The parent of the group is the parent of the oldest commit in the group.
+            # If the oldest commit is the initial commit, it has no parent.
+            parent_of_group = last_commit_in_group.parents[0] if last_commit_in_group.parents else None
+
+            # Calculate the diff from the parent of the oldest commit to the newest commit in the group.
+            # If parent_of_group is None (initial commit group), diff is from empty tree to first_commit_in_group.
+            diff = repo.git.diff(parent_of_group, first_commit_in_group.hexsha)
+
+            with open(os.path.join(group_dir, "diff.patch"), "w", encoding="utf-8") as f:
+                 f.write(diff)
+
+            # Clear the group for the next iteration
+            commit_group = []
+
+    # Stub aggregated files in the root .history directory.
+    # These files should eventually aggregate information from the processed commit group directories.
+    # For now, they remain dummy stubs.
     with open(os.path.join(history_dir, "memory.md"), "w") as f:
         f.write("## Dummy aggregated memory\n")
 
