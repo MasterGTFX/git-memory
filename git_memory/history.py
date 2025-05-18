@@ -52,7 +52,8 @@ def generate_history(repo_path: str, min_diff_lines: Optional[int]):
             if len(commit.parents) > 0:
                 # Compare commit to its first parent
                 diff_index = commit.diff(commit.parents[0], create_patch=True)
-                diff_text = diff_index.diff.decode('utf-8', errors='ignore')
+                # FIX: Access the patch text using .patch instead of .diff
+                diff_text = diff_index.patch.decode('utf-8', errors='ignore')
                 diff_lines = len(diff_text.splitlines())
             else:
                 # Initial commit: diff against empty tree
@@ -61,7 +62,9 @@ def generate_history(repo_path: str, min_diff_lines: Optional[int]):
                 # 4b825dc642cb6eb9a060e54bf8d69288fbee4904 is the hash of the empty tree
                 empty_tree_hash = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
                 try:
-                    diff_text = repo.git.diff(empty_tree_hash, commit_hash)
+                    # Using repo.git.diff directly returns the patch text as bytes
+                    diff_bytes = repo.git.diff(empty_tree_hash, commit_hash, as_bytes=True)
+                    diff_text = diff_bytes.decode('utf-8', errors='ignore')
                     diff_lines = len(diff_text.splitlines())
                 except git.exc.GitCommandError as e:
                      typer.secho(f"Warning: Could not generate diff for initial commit {commit_hash[:7]}: {e}", fg=typer.colors.YELLOW)
