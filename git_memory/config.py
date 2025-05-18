@@ -13,8 +13,8 @@ class Config:
     model_provider: str = "openai"
     # Default AI model name
     model: str = "gpt-4o"
-    # Minimum number of commits to group
-    min_commits: int = 1
+    # Number of commits to include in each group (minimum, except the last group)
+    commits_per_group: int = 1
     # Minimum number of diff lines to include a commit group
     min_diff_lines: Optional[int] = None
     # API key for AI provider (from environment)
