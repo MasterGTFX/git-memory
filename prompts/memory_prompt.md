@@ -1,1 +1,4 @@
- <!-- Memory prompt: instructions for generating natural-language memory per commit -->
+Please summarize the following git diff in a concise and informative way. Focus on the key changes and their implications.
+
+Diff:
+{{diff_text}}

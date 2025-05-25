@@ -19,3 +19,5 @@ class Config:
     min_diff_lines: Optional[int] = None
     # API key for AI provider (from environment)
     api_key: Optional[str] = os.getenv("OPENAI_API_KEY")
+    # OpenAI API base URL (optional)
+    openai_api_base: Optional[str] = os.getenv("OPENAI_API_BASE", None)
