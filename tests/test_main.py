@@ -147,7 +147,7 @@ class TestCLI:
         result = self.runner.invoke(app, ["--help"])
         
         assert result.exit_code == 0
-        assert "AI-powered commit-by-commit memory" in result.stdout
+        assert "Generate AI-powered memory and structure tracking" in result.stdout
         assert "--model-provider" in result.stdout
         assert "--model" in result.stdout
         assert "--min-diff-lines" in result.stdout

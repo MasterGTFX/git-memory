@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Related Documentation:**
+> - [PROJECT.md](PROJECT.md) - Project vision, requirements, and user-facing information
+> - [TODO.md](TODO.md) - Development roadmap and task tracking
+
 ## Development Commands
 
 **Install dependencies:**
@@ -19,6 +23,29 @@ python -m git_memory /path/to/repo
 **With options:**
 ```bash
 git-memory /path/to/repo --min-diff-lines 100 --model-provider openai --model gpt-4o
+```
+
+**Run tests:**
+```bash
+# Install test dependencies
+pip install -e .[test]
+
+# Run all tests
+pytest
+
+# Run tests with coverage
+pytest --cov=git_memory --cov-report=html
+
+# Run only unit tests (fast)
+pytest -m "not integration"
+
+# Run only integration tests
+pytest -m integration
+
+# Use the test runner script
+python run_tests.py
+# or interactive mode
+python run_tests.py --interactive
 ```
 
 ## Architecture Overview
@@ -63,8 +90,14 @@ The tool creates a `.history/` folder with:
 
 The tool has core Git processing implemented but AI integration is stubbed out. The `ai.py` module contains `NotImplementedError` placeholders for `summarize_diff` and `generate_diagram` functions that need actual AI provider implementations.
 
+> **See [TODO.md](TODO.md)** for detailed development roadmap and next steps for AI integration.
+
 ## Workflow
 
 - Add completed stuff to memory
 - Generate commit message
 - Commit and push changes
+
+## Development Best Practices
+
+- Add tests for every functionality. Before commit run the tests and make sure all are working. Do not make the tests passing but instead make the functionality working

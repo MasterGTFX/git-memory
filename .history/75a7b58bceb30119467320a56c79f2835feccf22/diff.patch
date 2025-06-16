@@ -1,0 +1,9 @@
+@@ -29,7 +29,7 @@ def generate_history(repo_path: str, min_commits: int, min_diff_lines: int | Non
+         # Write diff patch
+         parent = commit.parents[0] if commit.parents else None
+         diff = repo.git.diff(parent, commit.hexsha)
+-        with open(os.path.join(commit_dir, "diff.patch"), "w", encoding="utf-8") as f:
++        with open(os.path.join(commit_dir, "diff.patch"), "w") as f:
+             f.write(diff)
+ 
+     # Stub aggregated files

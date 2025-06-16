@@ -177,7 +177,7 @@ class TestSaveCommitFiles:
             sample_commit_data["diff_text"]
         )
         
-        save_commit_files(history_dir, commit_info)
+        save_commit_files(history_dir, commit_info, "openai", "gpt-4o")
         
         commit_dir = history_dir / sample_commit_data["hash"]
         assert commit_dir.exists()
@@ -223,7 +223,20 @@ class TestSaveAggregatedFiles:
             commit_info = CommitInfo(mock_commit, 10 + i, f"diff text {i}")
             mock_commits.append(commit_info)
         
-        save_aggregated_files(history_dir, mock_commits)
+        # Create mock commit memories  
+        from git_memory.ai import CommitMemory, CommitChange
+        mock_memories = []
+        for i in range(2):
+            memory = CommitMemory(
+                added=[CommitChange(description=f"Added feature {i}", files=[], impact="minor")],
+                removed=[],
+                changed=[],
+                summary=f"Test commit {i}",
+                technical_details=""
+            )
+            mock_memories.append(memory)
+        
+        save_aggregated_files(history_dir, mock_commits, mock_memories, "openai", "gpt-4o")
         
         # Check history.md
         history_file = history_dir / "history.md"
@@ -237,9 +250,8 @@ class TestSaveAggregatedFiles:
         memory_file = history_dir / "memory.md"
         assert memory_file.exists()
         memory_content = memory_file.read_text()
-        assert "# Project Memory" in history_content
-        assert "Total commits processed: 2" in memory_content
-        assert "Total lines changed: 21" in memory_content  # 10 + 11
+        assert "# Project Memory" in memory_content
+        assert "AI memories generated:** 2" in memory_content
         
         # Check structure.mmd
         structure_file = history_dir / "structure.mmd"

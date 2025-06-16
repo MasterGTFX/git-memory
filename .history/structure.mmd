@@ -1,8 +1,93 @@
 graph TD
-    A["Repository"] --> B["Git History"]
-    B --> C["Commits Processed"]
-    C --> D["Memory Generated"]
-    D --> E["Structure Analyzed"]
+    %% Main Application Entry Points
+    A[git-memory CLI] --> B[Typer App]
+    B --> C[Rich Console]
     
-    %% This is a placeholder aggregated Mermaid diagram
-    %% Will be replaced with AI-generated project structure
+    %% Core Modules
+    A --> D[Config Management]
+    A --> E[History Processing]
+    A --> F[AI Integration]
+    
+    %% Configuration Layer
+    D --> D1[Environment Variables]
+    D --> D2[API Keys]
+    D --> D3[Model Settings]
+    D --> D4[Provider Configs]
+    
+    %% Git Processing Layer
+    E --> E1[GitPython]
+    E --> E2[Commit Traversal]
+    E --> E3[Diff Extraction]
+    E --> E4[File Generation]
+    
+    %% AI Processing Layer  
+    F --> F1[Instructor Framework]
+    F --> F2[Pydantic Models]
+    F --> F3[Multi-Provider Support]
+    F --> F4[Fallback Mechanisms]
+    
+    %% AI Providers
+    F3 --> G1[OpenAI Client]
+    F3 --> G2[OpenRouter Client]
+    F3 --> G3[Local Model Client]
+    
+    %% Structured Data Models
+    F2 --> H1[CommitMemory]
+    F2 --> H2[ProjectMemory]
+    F2 --> H3[CommitChange]
+    
+    %% Prompt System
+    F --> I[Prompt Templates]
+    I --> I1[system.md]
+    I --> I2[memory_prompt.md]
+    I --> I3[aggregation_prompt.md]
+    I --> I4[diagram_prompt.md]
+    
+    %% Output Generation
+    E4 --> J[.history Structure]
+    J --> J1[memory.md]
+    J --> J2[structure.mmd]
+    J --> J3[history.md]
+    J --> J4[Per-Commit Folders]
+    
+    J4 --> K1[commit_hash/memory.md]
+    J4 --> K2[commit_hash/diff.patch]
+    J4 --> K3[commit_hash/structure.mmd]
+    
+    %% Testing Infrastructure
+    L[Test Suite] --> L1[Unit Tests]
+    L --> L2[Integration Tests]
+    L --> L3[Mock Dependencies]
+    L --> L4[Real Git Repos]
+    
+    %% Development Tools
+    M[Development] --> M1[pytest]
+    M --> M2[Coverage Reporting]
+    M --> M3[Type Checking]
+    M --> M4[Interactive Test Runner]
+    
+    %% External Dependencies
+    N[External Services] --> N1[Git Repository]
+    N --> N2[AI API Endpoints]
+    N --> N3[File System]
+    
+    %% Data Flow
+    N1 -.-> E2
+    E3 -.-> F1
+    F1 -.-> H1
+    H1 -.-> J1
+    
+    %% Styling
+    classDef cliLayer fill:#e1f5fe
+    classDef coreModule fill:#f3e5f5
+    classDef aiLayer fill:#e8f5e8
+    classDef dataModel fill:#fff3e0
+    classDef output fill:#fce4ec
+    classDef testing fill:#f1f8e9
+    
+    class A,B,C cliLayer
+    class D,E,F coreModule
+    class F1,F2,F3,F4,G1,G2,G3 aiLayer
+    class H1,H2,H3 dataModel
+    class J,J1,J2,J3,J4,K1,K2,K3 output
+    class L,L1,L2,L3,L4,M,M1,M2,M3,M4 testing
