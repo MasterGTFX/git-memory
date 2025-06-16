@@ -1,19 +1,27 @@
- [project]
- name = "git-memory"
- version = "0.1.0"
- description = "AI-powered commit-by-commit memory and structure tracking for Git projects."
- readme = "PROJECT.md"
- license = { file = "LICENSE" }
- requires-python = ">=3.11"
- authors = [
-     { name = "Dominik Baran" },
- ]
- dependencies = [
-     "typer>=0.9.0",
-     "rich>=10.0.0",
-     "gitpython>=3.1.0",
-     "openai>=0.26.0",
- ]
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
- [project.scripts]
- git-memory = "git_memory.__main__:app"
+[project]
+name = "git-memory"
+version = "0.1.0"
+description = "AI-powered commit-by-commit memory and structure tracking for Git projects."
+readme = "PROJECT.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+   { name = "Dominik Baran" },
+]
+dependencies = [
+   "typer>=0.9.0",
+   "rich>=10.0.0",
+   "gitpython>=3.1.0",
+   "openai>=0.26.0",
+]
+
+[project.scripts]
+git-memory = "git_memory.__main__:app"
+
+[tool.setuptools]
+packages = ["git_memory"]
+include-package-data = false
