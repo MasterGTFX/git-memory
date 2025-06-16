@@ -16,7 +16,16 @@ dependencies = [
    "typer>=0.9.0",
    "rich>=10.0.0",
    "gitpython>=3.1.0",
-   "openai>=0.26.0",
+   "openai>=1.0.0",
+   "instructor>=1.0.0",
+   "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+test = [
+   "pytest>=7.0.0",
+   "pytest-cov>=4.0.0",
+   "pytest-mock>=3.10.0",
 ]
 
 [project.scripts]
@@ -25,3 +34,23 @@ git-memory = "git_memory.__main__:app"
 [tool.setuptools]
 packages = ["git_memory"]
 include-package-data = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--verbose",
+    "--tb=short",
+    "--strict-markers",
+    "--disable-warnings",
+    "--cov=git_memory",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=80"
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]

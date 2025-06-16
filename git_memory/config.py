@@ -17,6 +17,13 @@ class Config:
     # Processing settings
     min_diff_lines: Optional[int] = None
     
+    # AI processing settings
+    ai_temperature: float = 0.2
+    ai_max_tokens: int = 2000
+    ai_aggregation_max_tokens: int = 3000
+    ai_timeout: int = 30  # seconds
+    ai_retry_attempts: int = 2
+    
     # API configuration
     openai_api_key: Optional[str] = os.getenv("OPENAI_API_KEY")
     openai_base_url: Optional[str] = os.getenv("OPENAI_BASE_URL")
