@@ -62,3 +62,9 @@ The tool creates a `.history/` folder with:
 ## Current State
 
 The tool has core Git processing implemented but AI integration is stubbed out. The `ai.py` module contains `NotImplementedError` placeholders for `summarize_diff` and `generate_diagram` functions that need actual AI provider implementations.
+
+## Workflow
+
+- Add completed stuff to memory
+- Generate commit message
+- Commit and push changes

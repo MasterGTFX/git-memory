@@ -1,0 +1,13 @@
+LICENSE
+PROJECT.md
+pyproject.toml
+git_memory/__init__.py
+git_memory/__main__.py
+git_memory/config.py
+git_memory/history.py
+git_memory.egg-info/PKG-INFO
+git_memory.egg-info/SOURCES.txt
+git_memory.egg-info/dependency_links.txt
+git_memory.egg-info/entry_points.txt
+git_memory.egg-info/requires.txt
+git_memory.egg-info/top_level.txt

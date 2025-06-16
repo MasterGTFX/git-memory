@@ -1,0 +1,2 @@
+[console_scripts]
+git-memory = git_memory.__main__:app
