@@ -182,7 +182,7 @@ Generate high-level project memory and insights."""
     
     def _load_prompt(self, filename: str) -> str:
         """Load prompt from prompts directory."""
-        prompt_path = Path(__file__).parent.parent / "prompts" / filename
+        prompt_path = Path(__file__).parent.parent.resolve() / "prompts" / filename
         try:
             with open(prompt_path, "r", encoding="utf-8") as f:
                 return f.read()
